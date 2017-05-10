@@ -50,7 +50,7 @@ import java.util.Locale;
 @SuppressWarnings("ConstantConditions")
 public class PictureSingeUCropActivity extends FragmentActivity {
 
-    public static final int DEFAULT_COMPRESS_QUALITY = 85;
+    public static final int DEFAULT_COMPRESS_QUALITY = 100;
     private static final int ROTATE_WIDGET_SENSITIVITY_COEFFICIENT = 42;
     public static final Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.JPEG;
     public static final int NONE = 0;

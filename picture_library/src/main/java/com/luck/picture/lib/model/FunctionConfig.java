@@ -42,13 +42,14 @@ public class FunctionConfig implements Serializable {
     public static final int SELECT_MAX_NUM = 9;
     public static final int MAX_COMPRESS_SIZE = 102400;
     public static final String FUNCTION_TAKE = "function_take";
+    public static final String TAKE_PHOTO_SUCCESS = "takePhotoSuccess";
     public static final String EXTRA_THIS_CONFIG = "function_options";
     public static final String EXTRA_IS_TOP_ACTIVITY = "isTopActivity";
     public static final String EXTRA_BOTTOM_PREVIEW = "bottom_preview";
     public static final String EXTRA_POSITION = "position";
     public static final String EXTRA_PREVIEW_LIST = "previewList";
     public static final String EXTRA_PREVIEW_SELECT_LIST = "previewSelectList";
-
+    public static final String DIRECTORY_PATH = "directory_path";
     public final static String FOLDER_NAME = "folderName";
     public final static String BUNDLE_CAMERA_PATH = "CameraPath";
     public final static String EXTRA_RESULT = "select_result";

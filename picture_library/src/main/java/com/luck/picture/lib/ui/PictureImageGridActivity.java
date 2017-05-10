@@ -35,6 +35,7 @@ import com.luck.picture.lib.compress.CompressInterface;
 import com.luck.picture.lib.compress.LubanOptions;
 import com.luck.picture.lib.decoration.GridSpacingItemDecoration;
 import com.luck.picture.lib.model.FunctionConfig;
+import com.luck.picture.lib.model.FunctionOptions;
 import com.luck.picture.lib.model.LocalMediaLoader;
 import com.luck.picture.lib.model.PictureConfig;
 import com.luck.picture.lib.observable.ImagesObservable;
@@ -58,6 +59,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.luck.picture.lib.model.FunctionConfig.CLOSE_SINE_CROP_FLAG;
 
 /**
  * author：luck
@@ -103,53 +106,67 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
                 List<LocalMedia> selectImages = obj.medias;
                 adapter.bindSelectImages(selectImages);
                 break;
+            case FunctionConfig.CROP_FLAG:
+                // 裁剪返回的数据
 
+                if (takePhoto || options.getSelectMode() == FunctionConfig.MODE_SINGLE) {
+                    List<LocalMedia> result = obj.medias;
+                    if (result == null)
+                        result = new ArrayList<>();
+                    handleCropResult(result);
+                }
+                break;
         }
     }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.picture_activity_image_grid);
+
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this);
         }
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        rl_bottom = (RelativeLayout) findViewById(R.id.rl_bottom);
-        picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
-        rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
-        picture_tv_title = (TextView) findViewById(R.id.picture_tv_title);
-        picture_tv_right = (TextView) findViewById(R.id.picture_tv_right);
-        tv_original_pic_des = (TextView) findViewById(R.id.original_pic_des);
-        cb_original_pic = (CheckBox)findViewById(R.id.original_pic_checkBox);
-        cb_original_pic.setOnCheckedChangeListener(this);
-        rl_picture_title.setBackgroundColor(backgroundColor);
-        ToolbarUtil.setColorNoTranslucent(this, backgroundColor);
-        tv_ok = (TextView) findViewById(R.id.tv_ok);
-        id_preview = (TextView) findViewById(R.id.id_preview);
-        tv_img_num = (TextView) findViewById(R.id.tv_img_num);
-        tv_mask = (TextView) findViewById(R.id.tv_mask);
-        id_preview.setText(getString(R.string.picture_preview));
-        tv_ok.setText(getString(R.string.picture_please_select));
-        animation = AnimationUtils.loadAnimation(this, R.anim.modal_in);
-        id_preview.setOnClickListener(this);
-        tv_ok.setOnClickListener(this);
-        picture_left_back.setOnClickListener(this);
-        picture_tv_right.setOnClickListener(this);
-        is_top_activity = getIntent().getBooleanExtra(FunctionConfig.EXTRA_IS_TOP_ACTIVITY, false);
+
         takePhoto = getIntent().getBooleanExtra(FunctionConfig.FUNCTION_TAKE, false);
         if (savedInstanceState != null) {
-            cameraPath = savedInstanceState.getString(FunctionConfig.BUNDLE_CAMERA_PATH);
+            getOnSaveValues(savedInstanceState);
         }
         if (takePhoto) {
             // 只拍照
-            onTakePhoto();
+            if (savedInstanceState == null) {
+                onTakePhoto();
+            }
             if (!enableCrop && isCompress) {
                 // 如果单独拍照，并且没有裁剪 但压缩 这里显示一个蒙版过渡一下
+                setContentView(R.layout.picture_empty);
                 ToolbarUtil.setColorNoTranslucent(this, R.color.black);
-                tv_mask.setVisibility(View.VISIBLE);
             }
         } else {
+            setContentView(R.layout.picture_activity_image_grid);
+            recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+            rl_bottom = (RelativeLayout) findViewById(R.id.rl_bottom);
+            picture_left_back = (ImageView) findViewById(R.id.picture_left_back);
+            rl_picture_title = (RelativeLayout) findViewById(R.id.rl_picture_title);
+            picture_tv_title = (TextView) findViewById(R.id.picture_tv_title);
+            picture_tv_right = (TextView) findViewById(R.id.picture_tv_right);
+            tv_original_pic_des = (TextView) findViewById(R.id.original_pic_des);
+            cb_original_pic = (CheckBox)findViewById(R.id.original_pic_checkBox);
+            cb_original_pic.setOnCheckedChangeListener(this);
+            rl_picture_title.setBackgroundColor(backgroundColor);
+            ToolbarUtil.setColorNoTranslucent(this, backgroundColor);
+            tv_ok = (TextView) findViewById(R.id.tv_ok);
+            id_preview = (TextView) findViewById(R.id.id_preview);
+            tv_img_num = (TextView) findViewById(R.id.tv_img_num);
+            tv_mask = (TextView) findViewById(R.id.tv_mask);
+            id_preview.setText(getString(R.string.picture_preview));
+            tv_ok.setText(getString(R.string.picture_please_select));
+            animation = AnimationUtils.loadAnimation(this, R.anim.modal_in);
+            id_preview.setOnClickListener(this);
+            tv_ok.setOnClickListener(this);
+            picture_left_back.setOnClickListener(this);
+            picture_tv_right.setOnClickListener(this);
+            is_top_activity = getIntent().getBooleanExtra(FunctionConfig.EXTRA_IS_TOP_ACTIVITY, false);
+
             if (!is_top_activity) {
                 // 第一次启动ImageActivity，没有获取过相册列表
                 // 先判断手机是否有读取权限，主要是针对6.0已上系统
@@ -258,12 +275,46 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
 
     }
 
+    /**
+     * 取拍照时 此activity被暂时回收存储的值
+     *
+     * @param savedInstanceState
+     */
+    private void getOnSaveValues(Bundle savedInstanceState) {
+        cameraPath = savedInstanceState.getString(FunctionConfig.BUNDLE_CAMERA_PATH);
+        takePhoto = savedInstanceState.getBoolean(FunctionConfig.FUNCTION_TAKE);
+        takePhotoSuccess = savedInstanceState.getBoolean(FunctionConfig.TAKE_PHOTO_SUCCESS);
+        takePhotoSuccess = true;
+        options = (FunctionOptions) savedInstanceState.getSerializable(FunctionConfig.EXTRA_THIS_CONFIG);
+        enableCrop = options.isEnableCrop();
+        isCompress = options.isCompress();
+        selectMode = options.getSelectMode();
+    }
     @Override
     protected void onResume() {
         super.onResume();
-        if (!picture_tv_right.isEnabled()) {
+        if (picture_tv_right != null && !picture_tv_right.isEnabled()) {
             picture_tv_right.setEnabled(true);
         }
+    }
+
+    private void handleCropResult(List<LocalMedia> result) {
+        if (result != null) {
+            if (isCompress && type == FunctionConfig.TYPE_IMAGE) {
+                // 压缩图片
+                compressImage(result);
+            } else {
+                onSelectDone(result);
+            }
+        }
+    }
+
+
+    /**
+     * 释放回调 导致的内存泄漏
+     */
+    protected void releaseCallBack() {
+        PictureConfig.resultCallback = null;
     }
 
     @Override
@@ -336,15 +387,13 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
                 }
             }
 
-
-                {
-                // 图片才压缩，视频不管
-                if (isCompress && type == FunctionConfig.TYPE_IMAGE) {
-                    compressImage(images);
-                } else {
-                    resultBack(images);
-                }
+            // 图片才压缩，视频不管
+            if (isCompress && type == FunctionConfig.TYPE_IMAGE) {
+                compressImage(images);
+            } else {
+                resultBack(images);
             }
+
         }
     }
 
@@ -738,12 +787,14 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
         PictureConfig.OnSelectResultCallback resultCallback = PictureConfig.getInstance().getResultCallback();
         if (resultCallback != null) {
             resultCallback.onSelectSuccess(result);
+            releaseCallBack();
         }
         EventEntity obj = new EventEntity(FunctionConfig.CLOSE_FLAG);
         EventBus.getDefault().post(obj);
         if ((takePhoto && takePhotoSuccess) || (enableCrop && isCompress && selectMode == FunctionConfig.MODE_SINGLE)) {
             // 如果是单独拍照并且压缩可能会造成还在压缩中，但此activity已关闭,或单选 裁剪压缩时等压缩完在关闭PictureSingeUCropActivity
             recycleCallBack();
+            releaseCallBack();
             EventEntity obj1 = new EventEntity(FunctionConfig.CLOSE_SINE_CROP_FLAG);
             EventBus.getDefault().post(obj1);
         } else {
@@ -757,6 +808,9 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(FunctionConfig.BUNDLE_CAMERA_PATH, cameraPath);
+        outState.putBoolean(FunctionConfig.FUNCTION_TAKE, takePhoto);
+        outState.putBoolean(FunctionConfig.TAKE_PHOTO_SUCCESS, takePhotoSuccess);
+        outState.putSerializable(FunctionConfig.EXTRA_THIS_CONFIG, options);
     }
 
 
@@ -910,9 +964,9 @@ public class PictureImageGridActivity extends PictureBaseActivity implements Vie
     private void updateOriginalFilesSize(){
         if (adapter != null && tv_original_pic_des != null && cb_original_pic != null &&
                 cb_original_pic.isChecked() && isShowOriginal){
-        tv_original_pic_des.setText(new StringBuffer("原图(")
-                .append(FileSizeUtils.getMediaSize(adapter.getSelectedImages()))
-                .append(")"));
+            tv_original_pic_des.setText(new StringBuffer("原图(")
+                    .append(FileSizeUtils.getMediaSize(adapter.getSelectedImages()))
+                    .append(")"));
         }
     }
 }
