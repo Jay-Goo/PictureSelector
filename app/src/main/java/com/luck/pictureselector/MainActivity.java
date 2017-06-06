@@ -3,6 +3,7 @@ package com.luck.pictureselector;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
@@ -106,6 +107,8 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         tv_select_num = (TextView) findViewById(R.id.tv_select_num);
         FullyGridLayoutManager manager = new FullyGridLayoutManager(MainActivity.this, 4, GridLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(manager);
+        //设置item间距
+        recyclerView.addItemDecoration(new SpaceItemDecoration(20));
         adapter = new GridImageAdapter(MainActivity.this, onAddPicClickListener);
         adapter.setList(selectMedia);
         adapter.setSelectMax(maxSelectNum);
@@ -330,6 +333,8 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                 adapter.notifyDataSetChanged();
             }
         }
+
+
     };
 
 

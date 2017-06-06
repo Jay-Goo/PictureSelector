@@ -33,6 +33,7 @@ public class GridImageAdapter extends
     private LayoutInflater mInflater;
     private List<LocalMedia> list = new ArrayList<>();
     private int selectMax = 9;
+    private int itemLayoutId = 0;
     /**
      * 点击添加图片跳转
      */
@@ -53,6 +54,10 @@ public class GridImageAdapter extends
 
     public void setList(List<LocalMedia> list) {
         this.list = list;
+    }
+
+    public void setItemLayoutIdResource(int id){
+        itemLayoutId = id;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -90,7 +95,7 @@ public class GridImageAdapter extends
      */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-        View view = mInflater.inflate(R.layout.gv_filter_image,
+        View view = mInflater.inflate(itemLayoutId == 0 ? R.layout.gv_filter_image : itemLayoutId,
                 viewGroup, false);
         final ViewHolder viewHolder = new ViewHolder(view);
         //itemView 的点击事件
