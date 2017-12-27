@@ -2,7 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.Jay-Goo'
 android {
-    compileSdkVersion 23
+
+    compileSdkVersion 24
     buildToolsVersion '25.0.0'
 
     defaultConfig {
@@ -33,13 +34,13 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.android.support:recyclerview-v7:23.4.0'
-    compile 'com.github.bumptech.glide:glide:3.7.0'
+    compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.commit451:PhotoView:1.2.4'
-    compile 'io.reactivex.rxjava2:rxjava:2.0.5'
-    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
-    compile 'org.greenrobot:eventbus:3.0.0'
+    provided 'com.android.support:recyclerview-v7:24.0.0'
+    provided 'com.github.bumptech.glide:glide:3.7.0'
+    provided 'io.reactivex.rxjava2:rxjava:2.0.5'
+    provided 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    provided 'org.greenrobot:eventbus:3.0.0'
 }
 
 
